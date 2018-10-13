@@ -1,5 +1,5 @@
 from socket import socket
-from inspect import isfunction
+from inspect import  isfunction
 from pickle import dump, load
 
 def stub(cls, host, port):
@@ -30,7 +30,10 @@ def stub(cls, host, port):
 
                 # Remote invoke method
                 r = resolver(self, name)
-                return r if isfunction(x) else r()
+                if isfunction(x):
+                    return r
+                else:
+                    raise
 
         def __enter__(self):
             return self
