@@ -3,9 +3,9 @@ from inspect import isfunction
 from pickle import dump, load
 
 def rmi(cls, host, port):
-    def resolver(proxy):
+    def resolver(proxy, name):
         def resolve(*args, **kwargs):
-            dump((args, kwargs), proxy.wfile)
+            dump((name, args, kwargs), proxy.wfile)
             return load(proxy.rfile)
         return resolve
 
@@ -16,7 +16,7 @@ def rmi(cls, host, port):
             self.rfile = self.socket.makefile('rb', 0)
             self.wfile = self.socket.makefile('wb', 0)
 
-            dump((args, kwargs), self.wfile) #TODO: Add class name
+            dump((cls.__module__, cls.__name__, args, kwargs), self.wfile)
             self.rfile.readline()
 
         def __getattribute__(self, name):
@@ -26,7 +26,7 @@ def rmi(cls, host, port):
             except AttributeError:
                 # We are looking for cls attributes
                 x = cls.__dict__[name]
-                r = resolver(self) #TODO: add name
+                r = resolver(self, name)
                 return r if isfunction(x) else r()
 
         def __enter__(self):

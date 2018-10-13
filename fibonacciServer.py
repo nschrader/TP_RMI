@@ -1,7 +1,6 @@
 from socketserver import StreamRequestHandler, TCPServer
 from pickle import dump, load
-
-from fibonacci import Fibonacci
+from importlib import import_module
 
 HOST = "localhost"
 PORT = 1234
@@ -10,12 +9,14 @@ ACK = b"ack\n"
 class RmiHandler(StreamRequestHandler):
     def handle(self):
         try:
-            cArgs, cKwargs = load(self.rfile)
-            fib = Fibonacci(*cArgs, **cKwargs) #TODO: Use real class
+            cModule, cName, cArgs, cKwargs = load(self.rfile)
+            cls = getattr(import_module(cModule), cName)
+            inst = cls(*cArgs, **cKwargs)
             self.wfile.write(ACK)
 
-            pArgs, pKwargs = load(self.rfile)
-            res = fib.calc(*pArgs, **pKwargs) #TODO: Use real function
+            pName, pArgs, pKwargs = load(self.rfile)
+            func = getattr(inst, pName)
+            res = func(*pArgs, **pKwargs)
             dump(res, self.wfile)
         except EOFError:
             pass
