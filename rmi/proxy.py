@@ -39,6 +39,6 @@ def stub(cls, host, port):
             return self
 
         def __exit__(self, *args):
-            self.socket.__exit__(*args)
+            return self.socket.__exit__(*args)
 
     return Proxy

@@ -1,0 +1,14 @@
+You have two choices:
+
+  1) Use RMI:
+      - In application.py:
+        * # with real...
+        * with stub...
+      - Run python3 server.py
+      - Run python3 application.py
+
+  2) Use local classes:
+      - In application.py:
+        * with real...
+        * # with stub...
+      - Run python3 application.py

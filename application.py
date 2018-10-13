@@ -1,9 +1,10 @@
 from fibonacci import Fibonacci
-from rmi import stub
+from rmi import stub, real
 
 HOST = "localhost"
 PORT = 1234
 
+# with real(Fibonacci)() as fib:
 with stub(Fibonacci, HOST, PORT)() as fib:
     try:
         num = int(input("Enter a number: "))
