@@ -12,15 +12,15 @@ with socket() as sock:
     sock.bind((HOST, PORT))
     sock.listen(10)
     conn, addr = sock.accept()
-    with conn:
+    with conn: #TODO: Add loop
         args, kwargs = loads(conn.recv(4096))
         conn.send(ACK)
-        fib = Fibonacci(*args, **kwargs)
+        fib = Fibonacci(*args, **kwargs) #TODO: Use real class
 
         print(args)
         print(kwargs)
         params = loads(conn.recv(4096))
         print(params)
-        num = 10
-        res = fib.calc(num)
+        num = 10 #TODO: Use real params
+        res = fib.calc(num) #TODO: Use real function
         conn.sendall(dumps(res))

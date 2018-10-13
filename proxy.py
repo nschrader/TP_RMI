@@ -13,8 +13,8 @@ def rmi(cls, host, port):
         def __init__(self, *args, **kwargs):
             self.socket = socket()
             self.socket.connect((host, port))
-            self.socket.sendall(dumps((args, kwargs)))
-            self.socket.recv(4096)
+            self.socket.sendall(dumps((args, kwargs))) #TODO: Add class name
+            self.socket.recv(4096) #TODO: Get rid of magic number
 
         def __getattribute__(self, name):
             try:
@@ -23,11 +23,8 @@ def rmi(cls, host, port):
             except AttributeError:
                 # We are looking for cls attributes
                 x = cls.__dict__[name]
-                r = resolver(self.socket)
-                if isfunction(x):
-                    return r
-                else:
-                    return r()
+                r = resolver(self.socket) #TODO: add name
+                return r if isfunction(x) else r()
 
         def __enter__(self):
             return self
