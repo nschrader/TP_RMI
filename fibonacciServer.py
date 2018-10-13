@@ -1,26 +1,35 @@
-from socket import socket, SOL_SOCKET, SO_REUSEADDR
-from pickle import dumps, loads
+from socketserver import StreamRequestHandler, TCPServer
+from pickle import dump, load
 
 from fibonacci import Fibonacci
 
 HOST = "localhost"
 PORT = 1234
-ACK = b"ack"
+ACK = b"ack\n"
 
-with socket() as sock:
-    sock.setsockopt(SOL_SOCKET, SO_REUSEADDR, True)
-    sock.bind((HOST, PORT))
-    sock.listen(10)
-    conn, addr = sock.accept()
-    with conn: #TODO: Add loop
-        args, kwargs = loads(conn.recv(4096))
-        conn.send(ACK)
-        fib = Fibonacci(*args, **kwargs) #TODO: Use real class
+class RmiHandler(StreamRequestHandler):
+    def handle(self):
+        try:
+            cArgs, cKwargs = load(self.rfile)
+            fib = Fibonacci(*cArgs, **cKwargs) #TODO: Use real class
+            self.wfile.write(ACK)
 
-        print(args)
-        print(kwargs)
-        params = loads(conn.recv(4096))
-        print(params)
-        num = 10 #TODO: Use real params
-        res = fib.calc(num) #TODO: Use real function
-        conn.sendall(dumps(res))
+            pArgs, pKwargs = load(self.rfile)
+            res = fib.calc(*pArgs, **pKwargs) #TODO: Use real function
+            dump(res, self.wfile)
+        except EOFError:
+            pass
+
+class Server(TCPServer):
+    def __init__(self, *args, **kwargs):
+        self.allow_reuse_address = True
+        super().__init__(*args, **kwargs)
+
+try:
+    server = Server((HOST, PORT), RmiHandler)
+    server.serve_forever()
+except KeyboardInterrupt:
+    pass
+finally:
+    print("closing")
+    server.server_close()
