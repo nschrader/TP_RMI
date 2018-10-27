@@ -15,6 +15,7 @@ with stub(Fibonacci, HOST, PORT)() as fib:
         while (True):
             input()
             fib.next()
+            print("Index is now at ", fib.index)
             print(fib.string(), end="")
 
     except ValueError:

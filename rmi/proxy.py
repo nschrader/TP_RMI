@@ -29,17 +29,19 @@ def stub(cls, host, port):
         def __getattribute__(self, name):
             try:
                 # We are looking for Proxy instance attributes, i.e. socket
-                return super(Proxy, self).__getattribute__(name)
+                return super().__getattribute__(name)
             except AttributeError:
                 # We are looking for cls attributes
-                x = cls.__dict__[name]
-
-                # Remote invoke method
-                r = resolver(self, name)
-                if isfunction(x):
+                if name in cls.__dict__ and isfunction(cls.__dict__[name]):
+                    # Remote invoke method later
+                    r = resolver(self, name)
                     return r
                 else:
-                    raise
+                    # Get instance attribute now
+                    req = AttributeRequest(name)
+                    self.dump(req)
+                    resp = self.load()
+                    return resp.returnOrRaise()
 
         def __enter__(self):
             return self

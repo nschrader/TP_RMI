@@ -27,11 +27,15 @@ class RmiHandler(StreamRequestHandler, PickleMixin):
             while (True):
                 try:
                     req = self.load()
-                    if not isinstance(req, MethodRequest):
-                        raise RequestOutOfOrderException(req, MethodRequest)
-                    func = getattr(inst, req.name)
-                    res = func(*req.args, **req.kwargs)
-                    resp = Response(raisedException=False, returnOrException=res)
+                    if isinstance(req, MethodRequest):
+                        func = getattr(inst, req.name)
+                        res = func(*req.args, **req.kwargs)
+                        resp = Response(raisedException=False, returnOrException=res)
+                    elif isinstance(req, AttributeRequest):
+                        attr = getattr(inst, req.name)
+                        resp = Response(raisedException=False, returnOrException=attr)
+                    else:
+                        raise RequestOutOfOrderException(req, MethodRequest, AttributeRequest)
                 except Exception as e:
                     resp = Response(raisedException=True, returnOrException=e)
                 finally:

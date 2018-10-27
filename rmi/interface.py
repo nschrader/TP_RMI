@@ -6,7 +6,7 @@ class ClassRequest:
         self.kwargs = kwargs
 
 class AttributeRequest:
-    def __init__(self, name, args, kwargs):
+    def __init__(self, name):
         self.name = name
 
 class MethodRequest:
