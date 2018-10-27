@@ -1,26 +1,41 @@
 from socketserver import StreamRequestHandler, TCPServer
-from pickle import dump, load
 from importlib import import_module
+
+from .interface import *
+from .misc import PickleMixin
 
 HOST = "localhost"
 PORT = 1234
-ACK = b"ack\n"
 
-class RmiHandler(StreamRequestHandler):
+class RmiHandler(StreamRequestHandler, PickleMixin):
     def handle(self):
         try:
             # Instanciate class
-            cModule, cName, cArgs, cKwargs = load(self.rfile)
-            cls = getattr(import_module(cModule), cName)
-            inst = cls(*cArgs, **cKwargs)
-            self.wfile.write(ACK)
+            try:
+                req = self.load()
+                if not isinstance(req, ClassRequest):
+                    raise RequestOutOfOrderException(req, ClassRequest)
+                cls = getattr(import_module(req.mName), req.cName)
+                inst = cls(*req.args, **req.kwargs)
+                resp = Response(raisedException=False)
+            except Exception as e:
+                resp = Response(raisedException=True, returnOrException=e)
+            finally:
+                self.dump(resp)
 
             # Invoke mathods
             while (True):
-                pName, pArgs, pKwargs = load(self.rfile)
-                func = getattr(inst, pName)
-                res = func(*pArgs, **pKwargs)
-                dump(res, self.wfile)
+                try:
+                    req = self.load()
+                    if not isinstance(req, MethodRequest):
+                        raise RequestOutOfOrderException(req, MethodRequest)
+                    func = getattr(inst, req.name)
+                    res = func(*req.args, **req.kwargs)
+                    resp = Response(raisedException=False, returnOrException=res)
+                except Exception as e:
+                    resp = Response(raisedException=True, returnOrException=e)
+                finally:
+                    self.dump(resp)
 
         except EOFError:
             pass

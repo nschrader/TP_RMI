@@ -1,15 +1,19 @@
 from socket import socket
 from inspect import  isfunction
-from pickle import dump, load
+
+from .interface import *
+from .misc import PickleMixin
 
 def stub(cls, host, port):
     def resolver(proxy, name):
         def resolve(*args, **kwargs):
-            dump((name, args, kwargs), proxy.wfile)
-            return load(proxy.rfile)
+            req = MethodRequest(name, args, kwargs)
+            proxy.dump(req)
+            resp = proxy.load()
+            return resp.returnOrRaise()
         return resolve
 
-    class Proxy:
+    class Proxy(PickleMixin):
         def __init__(self, *args, **kwargs):
             self.socket = socket()
             self.socket.connect((host, port))
@@ -17,8 +21,10 @@ def stub(cls, host, port):
             self.wfile = self.socket.makefile("wb", 0)
 
             # Remote instanciate class
-            dump((cls.__module__, cls.__name__, args, kwargs), self.wfile)
-            self.rfile.readline()
+            req = ClassRequest(cls.__module__, cls.__name__, args, kwargs)
+            self.dump(req)
+            resp = self.load()
+            resp.returnOrRaise()
 
         def __getattribute__(self, name):
             try:
