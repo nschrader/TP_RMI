@@ -1,4 +1,4 @@
-from socketserver import StreamRequestHandler, TCPServer
+from socketserver import StreamRequestHandler, ForkingTCPServer
 from importlib import import_module
 
 from .interface import *
@@ -6,8 +6,14 @@ from .misc import PickleMixin
 
 HOST = "localhost"
 PORT = 1234
+SECS = 1
+TIMEOUT = 5*SECS
 
 class RmiHandler(StreamRequestHandler, PickleMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.request.settimeout(TIMEOUT)
+
     def handle(self):
         try:
             # Instanciate class
@@ -44,7 +50,7 @@ class RmiHandler(StreamRequestHandler, PickleMixin):
         except EOFError:
             pass
 
-class Server(TCPServer):
+class Server(ForkingTCPServer):
     def __init__(self, *args, **kwargs):
         self.allow_reuse_address = True
         super().__init__(*args, **kwargs)
