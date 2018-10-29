@@ -5,9 +5,14 @@ class ClassRequest:
         self.args = args
         self.kwargs = kwargs
 
-class AttributeRequest:
+class GetAttributeRequest:
     def __init__(self, name):
         self.name = name
+
+class SetAttributeRequest:
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
 
 class MethodRequest:
     def __init__(self, name, args, kwargs):

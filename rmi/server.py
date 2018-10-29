@@ -29,19 +29,25 @@ class RmiHandler(StreamRequestHandler, PickleMixin):
             finally:
                 self.dump(resp)
 
-            # Invoke mathods
+            # Access instance
             while (True):
                 try:
                     req = self.load()
+                    # Invoke method
                     if isinstance(req, MethodRequest):
                         func = getattr(inst, req.name)
                         res = func(*req.args, **req.kwargs)
                         resp = Response(raisedException=False, returnOrException=res)
-                    elif isinstance(req, AttributeRequest):
+                    # Get attribute
+                    elif isinstance(req, GetAttributeRequest):
                         attr = getattr(inst, req.name)
                         resp = Response(raisedException=False, returnOrException=attr)
+                    # Set attribute
+                    elif isinstance(req, SetAttributeRequest):
+                        setattr(inst, req.name, req.value)
+                        resp = Response(raisedException=False)
                     else:
-                        raise RequestOutOfOrderException(req, MethodRequest, AttributeRequest)
+                        raise RequestOutOfOrderException(req, MethodRequest, GetAttributeRequest, SetAttributeRequest)
                 except Exception as e:
                     resp = Response(raisedException=True, returnOrException=e)
                 finally:
@@ -54,6 +60,9 @@ class Server(ForkingTCPServer):
     def __init__(self, *args, **kwargs):
         self.allow_reuse_address = True
         super().__init__(*args, **kwargs)
+
+    def handle_error(request, client_address):
+        pass
 
 def skeleton():
     try:

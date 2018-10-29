@@ -14,7 +14,7 @@ with stub(Fibonacci, HOST, PORT)() as fib:
         print("Press ENTER to generate the next Fibonacci Number", end="")
         while (True):
             input()
-            fib.next()
+            fib.index += 1
             print("Index is now at ", fib.index)
             print(fib.string(), end="")
 

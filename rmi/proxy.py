@@ -26,6 +26,9 @@ def stub(cls, host, port):
             resp = self.load()
             resp.returnOrRaise()
 
+            # Prepare for attribute manipulation
+            self.inited = True
+
         def __getattribute__(self, name):
             try:
                 # We are looking for Proxy instance attributes, i.e. socket
@@ -38,10 +41,20 @@ def stub(cls, host, port):
                     return r
                 else:
                     # Get instance attribute now
-                    req = AttributeRequest(name)
+                    req = GetAttributeRequest(name)
                     self.dump(req)
                     resp = self.load()
                     return resp.returnOrRaise()
+
+        def __setattr__(self, name, value):
+            try:
+                self.__dict__["inited"]
+                req = SetAttributeRequest(name, value)
+                self.dump(req)
+                resp = self.load()
+                return resp.returnOrRaise()
+            except KeyError:
+                super().__setattr__(name, value)
 
         def __enter__(self):
             return self
